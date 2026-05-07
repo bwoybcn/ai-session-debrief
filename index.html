@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Session debrief — Where are we with AI?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F0E0C;
+    --bg-soft:#16140F;
+    --ink:#ECE6D6;
+    --ink-soft:#C9C2B1;
+    --muted:#8B8576;
+    --rule:#2A2520;
+    --rule-soft:#1E1A14;
+    --accent:#E5A45D;
+    --accent-bright:#F2B470;
+    --accent-soft:rgba(229,164,93,.16);
+    --sage:#7A8A7C;
+    --rose:#C77A6E;
+    --dim-1:#3A332A;
+    --dim-2:#4F4737;
+    --dim-3:#665B45;
+    --transition:cubic-bezier(.2,.7,.2,1);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-feature-settings:"ss01","cv11";
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  /* subtle paper grain */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+    background-image:
+      radial-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+      radial-gradient(rgba(0,0,0,.06) 1px, transparent 1px);
+    background-size: 3px 3px, 5px 5px;
+    background-position: 0 0, 1px 2px;
+    mix-blend-mode:overlay;
+    opacity:.7;
+  }
+
+  .deck{position:relative; width:100vw; height:100vh; overflow:hidden}
+
+  .slide{
+    position:absolute; inset:0;
+    padding: 5.5vh 7vw;
+    display:flex; flex-direction:column;
+    opacity:0; transform:translateY(14px);
+    transition: opacity .55s var(--transition), transform .65s var(--transition);
+    pointer-events:none;
+    z-index:2;
+  }
+  .slide.active{opacity:1; transform:none; pointer-events:auto}
+
+  /* ------------ chrome ------------ */
+  .chrome{
+    position:fixed; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 28px;
+    z-index:10;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--muted);
+    pointer-events:none;
+  }
+  .chrome .meta{display:flex; gap:18px; align-items:center}
+  .chrome .meta .dot{width:5px; height:5px; border-radius:50%; background:var(--accent)}
+  .chrome .nav{display:flex; gap:6px; pointer-events:auto}
+  .chrome .nav button{
+    appearance:none; border:1px solid var(--rule); background:transparent; color:var(--ink-soft);
+    width:30px; height:30px; border-radius:50%; cursor:pointer;
+    display:grid; place-items:center; transition: all .25s ease;
+    font-size:14px;
+  }
+  .chrome .nav button:hover{ border-color:var(--accent); color:var(--accent) }
+  .chrome .counter{font-variant-numeric:tabular-nums; color:var(--ink-soft)}
+
+  .progress{
+    position:fixed; top:0; left:0; right:0; height:2px;
+    background:transparent; z-index:11;
+  }
+  .progress .bar{
+    height:100%; width:0%; background:var(--accent);
+    transition: width .55s var(--transition);
+  }
+
+  /* ------------ slide header band ------------ */
+  .eyebrow{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--muted); display:flex; gap:14px; align-items:center;
+    margin-bottom: 4vh;
+  }
+  .eyebrow .pip{display:inline-block; width:24px; height:1px; background:var(--accent)}
+
+  h1.display, h2.display{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:400;
+    letter-spacing:-.022em;
+    line-height:1.02;
+    margin:0;
+    font-feature-settings:"ss01","ss02";
+  }
+  h1.display{font-size:clamp(48px, 7.6vw, 124px)}
+  h2.display{font-size:clamp(36px, 4.8vw, 76px)}
+
+  .lead{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:300;
+    font-style:italic;
+    font-size:clamp(18px, 1.8vw, 26px);
+    color:var(--ink-soft);
+    line-height:1.4;
+    max-width:55ch;
+  }
+
+  .small-caps{
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted);
+  }
+
+  /* ------------ COVER ------------ */
+  .cover{ justify-content:space-between }
+  .cover .top{display:flex; justify-content:space-between; align-items:flex-start}
+  .cover .brand{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px; color:var(--ink-soft);
+  }
+  .cover .where{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); text-align:right; line-height:1.7 }
+  .cover .center{ display:flex; flex-direction:column; gap:30px; padding:6vh 0 0; flex:1; justify-content:center }
+  .cover .center h1{
+    font-size:clamp(56px, 9.4vw, 168px);
+  }
+  .cover .center h1 em{
+    font-style:italic; color:var(--accent); font-weight:300;
+  }
+  .cover .footnote{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:30px;
+    border-top:1px solid var(--rule); padding-top:18px;
+  }
+  .cover .footnote .stat{display:flex; gap:14px; align-items:baseline}
+  .cover .footnote .num{
+    font-family:'Fraunces',serif; font-size:46px; font-weight:300; color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .cover .footnote .label{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); max-width:14ch; line-height:1.5}
+
+  /* ------------ TWO-COLUMN ------------ */
+  .two-col{display:grid; grid-template-columns: 1.05fr 1fr; gap:70px; align-items:start; flex:1}
+  .three-col{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:48px}
+
+  .stat-block{display:flex; flex-direction:column; gap:8px}
+  .stat-block .num{
+    font-family:'Fraunces',serif; font-weight:300;
+    font-size:clamp(56px, 6vw, 96px);
+    color:var(--ink); line-height:1;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;
+  }
+  .stat-block .num.accent{color:var(--accent)}
+  .stat-block .label{
+    font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+    max-width:24ch; line-height:1.6;
+  }
+
+  /* ------------ chart: bar ------------ */
+  .bar-chart{display:flex; flex-direction:column; gap:22px; width:100%}
+  .bar-row{display:grid; grid-template-columns: 18ch 1fr 4ch; gap:18px; align-items:center}
+  .bar-row .name{font-size:14px; color:var(--ink-soft); letter-spacing:.01em}
+  .bar-row .track{
+    height:16px; background:var(--rule-soft); border-radius:1px;
+    position:relative; overflow:hidden;
+  }
+  .bar-row .fill{
+    position:absolute; inset:0 auto 0 0;
+    background:linear-gradient(90deg, var(--dim-3), var(--accent));
+    width:0%;
+    transition: width 1.1s var(--transition) .15s;
+  }
+  .slide.active .bar-row .fill{ width: var(--w, 0%) }
+  .bar-row .val{
+    text-align:right; font-variant-numeric:tabular-nums; font-weight:500;
+    font-size:14px; color:var(--ink);
+  }
+
+  /* ------------ stacked compare bars (before/after) ------------ */
+  .stack-pair{display:flex; flex-direction:column; gap:34px; width:100%}
+  .stack{display:flex; flex-direction:column; gap:10px}
+  .stack .stack-label{
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .stack .stack-label .who{
+    font-family:'Fraunces',serif; font-style:italic; font-size:22px; color:var(--ink);
+  }
+  .stack .stack-label .n{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
+  .stack-bar{
+    display:flex; height:34px; width:100%;
+    border-radius:1px; overflow:hidden; background:var(--rule-soft);
+  }
+  .stack-bar > span{
+    height:100%; transition: flex-basis 1s var(--transition) .2s;
+    flex-basis:0%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600; color:rgba(15,14,12,.85);
+    font-variant-numeric:tabular-nums;
+  }
+  .slide.active .stack-bar > span{flex-basis: var(--bw, 0%) }
+  .seg-1{background:#5B4434}    /* not confident */
+  .seg-2{background:#8C6B49}    /* hesitant */
+  .seg-3{background:#B98856}    /* reasonably */
+  .seg-4{background:#E5A45D; color:#1A1612}   /* pretty */
+  .seg-5{background:#F4C898; color:#1A1612}   /* very */
+  .stack-bar > span.empty{ visibility:hidden }
+
+  .stack-legend{
+    display:flex; flex-wrap:wrap; gap: 18px 26px; margin-top:8px;
+  }
+  .stack-legend .lg{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft)}
+  .stack-legend .swatch{width:12px; height:12px; border-radius:1px}
+
+  /* ------------ pull quote ------------ */
+  .quote{
+    font-family:'Fraunces',serif; font-weight:300; font-style:italic;
+    font-size:clamp(20px, 2vw, 28px); line-height:1.35; color:var(--ink);
+    border-left:1px solid var(--accent);
+    padding-left:22px;
+  }
+  .quote .attr{
+    display:block; font-style:normal; font-family:'Inter',sans-serif;
+    font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--muted); margin-top:14px;
+  }
+
+  .quote-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:46px 60px;
+    align-content:center; flex:1;
+  }
+
+  /* ------------ themes (action chart) ------------ */
+  .themes{display:flex; flex-direction:column; gap:22px; width:100%}
+  .theme-row{
+    display:grid; grid-template-columns: 1.3fr 2.6fr 4ch; gap:24px; align-items:center;
+    padding-bottom:18px; border-bottom:1px solid var(--rule-soft);
+  }
+  .theme-row:last-child{border-bottom:none}
+  .theme-name{
+    font-family:'Fraunces',serif; font-weight:400; font-size:22px; color:var(--ink);
+  }
+  .theme-name small{
+    display:block; font-family:'Inter',sans-serif; font-weight:400; font-style:normal;
+    font-size:12px; color:var(--muted); margin-top:4px; letter-spacing:.02em;
+  }
+  .theme-row .track{height:8px; background:var(--rule-soft); border-radius:1px; position:relative; overflow:hidden}
+  .theme-row .fill{
+    position:absolute; inset:0 auto 0 0; width:0%;
+    background:var(--accent);
+    transition: width 1s var(--transition) .25s;
+  }
+  .slide.active .theme-row .fill{ width: var(--w, 0%) }
+  .theme-row .val{ text-align:right; font-size:14px; font-variant-numeric:tabular-nums; color:var(--ink-soft) }
+  .theme-row.dominant .theme-name{ color:var(--accent) }
+
+  /* ------------ value bars (stack) ------------ */
+  .value-list{display:flex; flex-direction:column; gap:24px; width:100%}
+  .value-row{display:grid; grid-template-columns: 1fr 7ch; gap:24px; align-items:center}
+  .value-row .label{font-family:'Fraunces',serif; font-size:21px; color:var(--ink); line-height:1.3}
+  .value-row .meter{
+    grid-column: 1 / 3;
+    height:5px; background:var(--rule-soft); border-radius:1px;
+    position:relative; overflow:hidden;
+  }
+  .value-row .meter > span{
+    position:absolute; inset:0 auto 0 0; width:0%;
+    background:linear-gradient(90deg, var(--accent), var(--accent-bright));
+    transition: width 1s var(--transition) .2s;
+  }
+  .slide.active .value-row .meter > span{ width: var(--w, 0%) }
+  .value-row .val{
+    text-align:right; font-variant-numeric:tabular-nums; color:var(--accent);
+    font-family:'Fraunces',serif; font-size:24px;
+  }
+
+  /* ------------ big stat slide ------------ */
+  .hero-stat{
+    flex:1; display:grid; grid-template-columns: 1.2fr 1fr; gap:60px; align-items:center;
+  }
+  .hero-stat .big{
+    font-family:'Fraunces',serif; font-weight:300;
+    font-size:clamp(140px, 22vw, 360px);
+    line-height:.85; color:var(--ink);
+    letter-spacing:-.04em; font-variant-numeric:tabular-nums;
+  }
+  .hero-stat .big .slash{color:var(--accent); font-style:italic; font-weight:300}
+  .hero-stat .body p{
+    font-family:'Fraunces',serif; font-weight:300; font-style:italic;
+    font-size:clamp(20px, 2vw, 30px); line-height:1.35; color:var(--ink);
+    margin:0 0 22px;
+  }
+  .hero-stat .breakdown{display:flex; flex-direction:column; gap:14px; margin-top:10px; padding-top:18px; border-top:1px solid var(--rule)}
+  .hero-stat .breakdown div{display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft); letter-spacing:.02em}
+  .hero-stat .breakdown b{color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums}
+
+  /* ------------ closing ------------ */
+  .close-wrap{flex:1; display:flex; flex-direction:column; justify-content:space-between}
+  .close-headline h1{
+    font-size:clamp(80px, 12vw, 220px); line-height:.95;
+  }
+  .close-headline h1 em{font-style:italic; color:var(--accent); font-weight:300}
+  .ribbon{
+    display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;
+    border-top:1px solid var(--rule); padding-top:26px;
+  }
+  .ribbon .item{display:flex; flex-direction:column; gap:6px}
+  .ribbon .num{
+    font-family:'Fraunces',serif; font-weight:300;
+    font-size:46px; color:var(--accent); line-height:1;
+    font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+  }
+  .ribbon .label{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); max-width:22ch; line-height:1.6}
+
+  /* ------------ tools chart variant ------------ */
+  .tools-list{display:flex; flex-direction:column; gap:14px; width:100%}
+  .tool-row{display:grid; grid-template-columns: 14ch 1fr 4ch; gap:16px; align-items:center; font-size:13px; color:var(--ink-soft)}
+  .tool-row .track{height:6px; background:var(--rule-soft); border-radius:1px; overflow:hidden; position:relative}
+  .tool-row .fill{position:absolute; inset:0 auto 0 0; width:0%; background:var(--sage); transition: width 1s var(--transition) .2s}
+  .slide.active .tool-row .fill{width: var(--w, 0%)}
+  .tool-row .val{text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-soft)}
+
+  /* ------------ section divider title ------------ */
+  .head-block{display:flex; flex-direction:column; gap:18px; max-width:30ch}
+  .head-sub{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:300;
+    font-size:clamp(18px, 1.6vw, 22px); color:var(--ink-soft); line-height:1.45; max-width:42ch;
+    margin-top: 6px;
+  }
+
+  /* hint to nav */
+  .hint{
+    position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted);
+    z-index:10; opacity:.7; pointer-events:none;
+  }
+  .hint kbd{
+    font-family:'Inter',sans-serif; padding:2px 6px; border:1px solid var(--rule);
+    border-radius:3px; margin:0 3px; color:var(--ink-soft);
+  }
+
+  @media (max-width: 900px){
+    .two-col{grid-template-columns:1fr; gap:40px}
+    .hero-stat{grid-template-columns:1fr; gap:30px}
+    .quote-grid{grid-template-columns:1fr; gap:30px}
+    .ribbon{grid-template-columns:1fr 1fr}
+    .slide{padding: 5vh 6vw}
+  }
+
+  @media print{
+    body, html{height:auto; overflow:visible}
+    .deck{height:auto}
+    .slide{position:relative; opacity:1; transform:none; pointer-events:auto;
+      page-break-after: always; min-height: 100vh; height:auto}
+    .chrome, .progress, .hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="bar" id="progressBar"></div></div>
+
+<div class="deck" id="deck">
+
+  <!-- ============================================ -->
+  <!-- 01 COVER -->
+  <!-- ============================================ -->
+  <section class="slide cover active" data-slide>
+    <div class="top">
+      <div class="brand">A debrief in nine slides</div>
+      <div class="where">Internal session<br/>07 May 2026</div>
+    </div>
+    <div class="center">
+      <div class="eyebrow"><span class="pip"></span><span>The room, told back to itself</span></div>
+      <h1 class="display">Where we are<br/>with <em>AI.</em></h1>
+      <p class="lead">What thirty-six of you told us before the session — and what thirty of you told us after.</p>
+    </div>
+    <div class="footnote">
+      <div class="stat">
+        <span class="num">36</span>
+        <span class="label">Pre-session<br/>responses</span>
+      </div>
+      <div class="stat">
+        <span class="num">30</span>
+        <span class="label">Post-session<br/>reflections</span>
+      </div>
+      <div class="stat">
+        <span class="num">66</span>
+        <span class="label">Voices in this<br/>read-out</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 02 THE ROOM BEFORE -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>01 / The room, before</span></div>
+    <div class="two-col" style="flex:1; align-items:center">
+      <div class="head-block">
+        <h2 class="display">A room of<br/>quiet curiosity.</h2>
+        <p class="head-sub">Most of you arrived already using AI in some form — but cautiously, and mostly with the basics.</p>
+      </div>
+      <div class="bar-chart" aria-label="How attendees were feeling about AI before the session">
+        <div class="bar-row"><span class="name">Curious but cautious</span><div class="track"><div class="fill" style="--w:100%"></div></div><span class="val">20</span></div>
+        <div class="bar-row"><span class="name">Quietly interested</span><div class="track"><div class="fill" style="--w:40%"></div></div><span class="val">8</span></div>
+        <div class="bar-row"><span class="name">Worried about it</span><div class="track"><div class="fill" style="--w:15%"></div></div><span class="val">3</span></div>
+        <div class="bar-row"><span class="name">Genuinely excited</span><div class="track"><div class="fill" style="--w:15%"></div></div><span class="val">3</span></div>
+        <div class="bar-row"><span class="name">Sceptical</span><div class="track"><div class="fill" style="--w:10%"></div></div><span class="val">2</span></div>
+        <div style="margin-top:10px; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted)">"Honestly — how do you feel about AI right now?" · 36 responses</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 03 USAGE & TOOLS -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>02 / What you were already using</span></div>
+    <div class="two-col" style="flex:1; align-items:center">
+      <div>
+        <h2 class="display" style="margin-bottom:18px">Already weekly — for most.</h2>
+        <p class="head-sub" style="margin-bottom:34px">Three in four of you reach for AI weekly or daily. The session was meeting an audience already in motion.</p>
+        <div class="bar-chart" aria-label="Frequency of AI use">
+          <div class="bar-row"><span class="name">Most weeks</span><div class="track"><div class="fill" style="--w:100%"></div></div><span class="val">15</span></div>
+          <div class="bar-row"><span class="name">Daily</span><div class="track"><div class="fill" style="--w:80%"></div></div><span class="val">12</span></div>
+          <div class="bar-row"><span class="name">Now &amp; then</span><div class="track"><div class="fill" style="--w:40%"></div></div><span class="val">6</span></div>
+          <div class="bar-row"><span class="name">Tried once or twice</span><div class="track"><div class="fill" style="--w:13%"></div></div><span class="val">2</span></div>
+          <div class="bar-row"><span class="name">Never</span><div class="track"><div class="fill" style="--w:6%"></div></div><span class="val">1</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="small-caps" style="margin-bottom:22px">Tools you'd actually used</div>
+        <div class="tools-list">
+          <div class="tool-row"><span>ChatGPT</span><div class="track"><div class="fill" style="--w:100%"></div></div><span class="val">32</span></div>
+          <div class="tool-row"><span>Microsoft Copilot</span><div class="track"><div class="fill" style="--w:72%"></div></div><span class="val">23</span></div>
+          <div class="tool-row"><span>Google Gemini</span><div class="track"><div class="fill" style="--w:34%"></div></div><span class="val">11</span></div>
+          <div class="tool-row"><span>In-app AI features</span><div class="track"><div class="fill" style="--w:28%"></div></div><span class="val">9</span></div>
+          <div class="tool-row"><span>Anthropic Claude</span><div class="track"><div class="fill" style="--w:19%"></div></div><span class="val">6</span></div>
+          <div class="tool-row"><span>Something else</span><div class="track"><div class="fill" style="--w:6%"></div></div><span class="val">2</span></div>
+        </div>
+        <p class="lead" style="margin-top:30px; font-size:18px">Familiar with the surface; less so with what sits underneath.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 04 CONFIDENCE SHIFT (HERO) -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>03 / The shift</span></div>
+    <h2 class="display" style="margin-bottom:6px">After today, the floor lifted.</h2>
+    <p class="head-sub" style="max-width:62ch; margin-bottom:5vh">Five of you arrived hesitant or avoiding AI altogether. By the end of the session, that group had vanished — and the centre of gravity had moved decisively up.</p>
+
+    <div class="stack-pair" style="max-width:1100px">
+      <div class="stack">
+        <div class="stack-label"><span class="who">Before the session</span><span class="n">36 responses</span></div>
+        <div class="stack-bar" aria-label="Confidence before">
+          <span class="seg-1" style="--bw:2.8%" title="Not confident">·</span>
+          <span class="seg-2" style="--bw:11.1%" title="Hesitant">11%</span>
+          <span class="seg-3" style="--bw:61.1%" title="Reasonably">61%</span>
+          <span class="seg-4" style="--bw:16.7%" title="Pretty confident">17%</span>
+          <span class="seg-5" style="--bw:8.3%" title="Very confident">8%</span>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="stack-label"><span class="who">After the session</span><span class="n">30 responses</span></div>
+        <div class="stack-bar" aria-label="Confidence after">
+          <span class="seg-1 empty" style="--bw:0%"></span>
+          <span class="seg-2 empty" style="--bw:0%"></span>
+          <span class="seg-3" style="--bw:33.3%" title="Reasonably">33%</span>
+          <span class="seg-4" style="--bw:50%" title="Pretty confident">50%</span>
+          <span class="seg-5" style="--bw:16.7%" title="Very confident">17%</span>
+        </div>
+      </div>
+      <div class="stack-legend">
+        <div class="lg"><span class="swatch seg-1"></span>Not confident at all</div>
+        <div class="lg"><span class="swatch seg-2"></span>A bit hesitant</div>
+        <div class="lg"><span class="swatch seg-3"></span>Reasonably confident</div>
+        <div class="lg"><span class="swatch seg-4"></span>Pretty confident</div>
+        <div class="lg"><span class="swatch seg-5"></span>Very confident — could help others</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:48px; margin-top:auto; padding-top:40px; border-top:1px solid var(--rule)">
+      <div class="stat-block">
+        <div class="num accent">5 &rarr; 0</div>
+        <div class="label">Hesitant or avoiding<br/>AI · gone by the end</div>
+      </div>
+      <div class="stat-block">
+        <div class="num accent">9 &rarr; 20</div>
+        <div class="label">"Pretty confident" or<br/>"could help others"</div>
+      </div>
+      <div class="stat-block">
+        <div class="num accent">2&times;</div>
+        <div class="label">Top-tier confidence<br/>more than doubled</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 05 INTENT -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>04 / Forward intent</span></div>
+    <div class="hero-stat">
+      <div>
+        <div class="big">29<span class="slash">/</span>30</div>
+      </div>
+      <div class="body">
+        <p>say they're likely to use AI in their work in the next month — and twenty-three say <em style="color:var(--accent); font-style:italic">definitely.</em></p>
+        <div class="breakdown">
+          <div><span>Definitely yes</span><b>23</b></div>
+          <div><span>Probably yes</span><b>6</b></div>
+          <div><span>Maybe</span><b>1</b></div>
+          <div><span>Probably / definitely no</span><b>0</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 06 WHAT YOU'LL DO DIFFERENTLY -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>05 / What you'll do differently</span></div>
+    <h2 class="display" style="margin-bottom:6px">Five clear themes,<br/>one clear winner.</h2>
+    <p class="head-sub" style="max-width:60ch; margin-bottom:5vh">"What's one specific thing from today that you'll do differently in the next two weeks?" — 28 of you wrote something. The patterns were striking.</p>
+
+    <div class="themes" style="max-width:1100px">
+      <div class="theme-row dominant">
+        <div class="theme-name">Use thinking mode<small>The dominant takeaway — eleven of you named it directly</small></div>
+        <div class="track"><div class="fill" style="--w:100%"></div></div>
+        <div class="val">11</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-name">Check the settings &amp; the model<small>Which engine, which mode, which data setting</small></div>
+        <div class="track"><div class="fill" style="--w:55%"></div></div>
+        <div class="val">6</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-name">Try other tools and compare<small>Beyond the default — Gemini, Copilot, Claude</small></div>
+        <div class="track"><div class="fill" style="--w:36%"></div></div>
+        <div class="val">4</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-name">Better prompts &amp; context<small>Clearer instructions, single-source-of-truth context</small></div>
+        <div class="track"><div class="fill" style="--w:27%"></div></div>
+        <div class="val">3</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-name">Use deep research &amp; learn mode<small>Going beyond the chat box</small></div>
+        <div class="track"><div class="fill" style="--w:27%"></div></div>
+        <div class="val">3</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 07 THE VALUE -->
+  <!-- ============================================ -->
+  <section class="slide" data-slide>
+    <div class="eyebrow"><span class="pip"></span><span>06 / The value of today</span></div>
+    <div class="two-col" style="flex:1; align-items:center">
+      <div class="head-block">
+        <h2 class="display">Practical first.<br/>Then a rethink.</h2>
+        <p class="head-sub">Most of you left with concrete things to do. Nearly a quarter said the session changed how you think about AI in your role.</p>
+        <p class="small-caps" style="margin-top:18px">"Which statement best describes<br/>the value of today?" · 30 responses</p>
+      </div>
+      <div class="value-list">
+        <div class="value-row">
+          <div class="label">It gave me practical things I can use</div>
+          <div class="val">16</div>
+          <div class="meter"><span style="--w:100%"></span></div>
+        </div>
+        <div class="value-row">
+          <div class="label">It changed how I think about AI in my role</div>
+          <div class="val">7</div>
+          <div class="meter"><span style="--w:43%"></span></div>
+        </div>
+        <div class="value-row">
+          <div class="label">It clarified what we should &amp; shouldn't do as a department</div>
+          <div class="val">3</div>
+          <div class="meter"><span style="--w:18%"></span></div>
+        </div>
+        <div class="value-row">
+          <div class="label">It confirmed I was already on the right track</div>
+          <div class="val">2</div>
+          <div class="meter"><span style="--w:12%"></span></div>
+        </div>
+        <div class="value-row">
+          <div class="label">It surfaced concerns I now feel are taken seriously</div>
+          <div class="val">2</div>
+          <div class="meter"><span style="--w:12%"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="chrome">
+  <div class="meta"><span class="dot"></span><span>Session debrief · Where are we with AI?</span></div>
+  <div class="counter"><span id="curIdx">01</span> &nbsp;/&nbsp; <span id="totIdx">09</span></div>
+  <div class="nav">
+    <button id="prev" aria-label="Previous slide">&larr;</button>
+    <button id="next" aria-label="Next slide">&rarr;</button>
+  </div>
+</div>
+
+<div class="hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>space</kbd> to navigate · <kbd>F</kbd> for fullscreen</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('[data-slide]'));
+  const total = slides.length;
+  let current = 0;
+
+  const curEl = document.getElementById('curIdx');
+  const totEl = document.getElementById('totIdx');
+  const bar = document.getElementById('progressBar');
+  totEl.textContent = String(total).padStart(2, '0');
+
+  function render(){
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    curEl.textContent = String(current + 1).padStart(2, '0');
+    bar.style.width = ((current + 1) / total * 100) + '%';
+    history.replaceState(null, '', '#' + (current + 1));
+  }
+
+  function go(i){
+    current = Math.max(0, Math.min(total - 1, i));
+    render();
+  }
+
+  document.getElementById('prev').addEventListener('click', () => go(current - 1));
+  document.getElementById('next').addEventListener('click', () => go(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(current + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(current - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(total - 1);
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  // Click anywhere on slide (except buttons/links) advances
+  document.getElementById('deck').addEventListener('click', (e) => {
+    if (e.target.closest('button,a,kbd')) return;
+    go(current + 1);
+  });
+
+  // Deep link via hash
+  const initial = parseInt((location.hash || '#1').slice(1), 10);
+  if (!Number.isNaN(initial)) go(initial - 1); else render();
+
+  // Touch swipe
+  let touchX = null;
+  document.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 40) go(current + (dx < 0 ? 1 : -1));
+    touchX = null;
+  }, {passive:true});
+</script>
+
+</body>
+</html>
